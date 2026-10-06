@@ -8,7 +8,8 @@ Linux 서버와 macOS에서 같은 셸 환경을 만드는 [chezmoi](https://www
 - **환경변수**: 이름·이메일·GitHub·workspace 경로 등 chezmoi 데이터로 렌더링
 - **PATH**: 중복 없이, 존재하는 디렉터리만, 우선순위대로
 - **자동완성**: uv, uvx, poetry, poe, chezmoi, gh, docker, task, yq, kubectl (zsh + bash)
-- **alias**: docker, cd, chezmoi
+- **Docker**: 설치, 서비스·그룹 설정, GPU 서버면 NVIDIA container toolkit까지
+- **alias**: docker, cd, chezmoi, gpu
 
 ## 설치
 
@@ -40,6 +41,88 @@ git clone https://github.com/maenjh/moondotfiles.git ~/moondotfiles
 | `chezmoi apply --refresh-externals` | oh-my-zsh·플러그인 즉시 갱신 (기본은 주 1회) |
 | `chezmoi init` | 새로 추가된 질문에 답하기 / 데이터 다시 렌더링 |
 
+## 자주 하는 작업
+
+**새 머신 세팅**
+
+```sh
+git clone https://github.com/maenjh/moondotfiles.git ~/moondotfiles
+~/moondotfiles/install.sh        # 질문에 답하면 패키지·uv tools·zsh까지 설치
+exec zsh                         # 또는 새 터미널
+```
+
+**설정 바꾸기** (예: alias 추가)
+
+```sh
+chezmoi cd                       # 소스 디렉터리로 이동 (= cddot)
+vi home/dot_config/shrc/30-aliases
+chezmoi diff && chezmoi apply    # 확인 후 적용
+git commit -am "Add alias" && git push
+```
+
+다른 머신에서는 `chezmoi update` (`dotu`) 한 번이면 반영됩니다.
+
+**패키지 / uv tool 추가**: `home/.chezmoidata/packages.yaml` 또는 `uv_tools.yaml`에 한 줄 추가 → `chezmoi apply`. 목록이 바뀌었으니 설치 스크립트가 다시 실행됩니다.
+
+**init 답 바꾸기** (예: 패키지 범위를 system으로): `~/.config/chezmoi/chezmoi.yaml`의 `data:`를 고치고 `chezmoi apply`. 또는 그 키를 지우고 `chezmoi init`으로 다시 질문받기.
+
+**머신 전용 설정**: `~/.config/shrc/90-local`처럼 레포에 없는 이름으로 만들면 함께 로드되고 chezmoi가 건드리지 않습니다.
+
+**문제 확인**
+
+| | |
+|---|---|
+| `DOTFILES_VERBOSE=true zsh -i` | 어떤 파일을 어떤 순서로 불러오는지 출력 |
+| `paths` | PATH를 한 줄씩, 없는 디렉터리는 `!` |
+| `chezmoi doctor` | chezmoi 환경 점검 |
+| `chezmoi status` | 레포와 실제 파일이 다른 곳 |
+| `MOONDOTFILES_NO_ZSH=1 bash -l` | zsh 자동 전환 없이 bash 실행 |
+
+## alias
+
+| 일반 | |
+|---|---|
+| `gpu` | `nvitop` (없으면 `uvx nvitop`) |
+| `paths` | PATH 한 줄씩 보기 |
+| `refreshenv` | 현재 셸 다시 시작 |
+| `czm` `czma` `czmd` `czme` `czmu`/`dotu` | chezmoi, apply, diff, edit, update |
+
+| cd | |
+|---|---|
+| `cdw` | `$WORKSPACE_HOME` |
+| `cdp [이름]` / `cdr [이름]` / `cdc [이름]` | `projects/` / `references/` / `containers/` 아래로 |
+| `gcdp REPO` / `gcdr REPO` | projects / references에 clone하고 이동 |
+| `cddot` | 이 dotfiles 레포 |
+| `mcd DIR` | `mkdir -p` 후 이동 |
+
+| docker | |
+|---|---|
+| `dki` `dkls`/`dkl` `dkirm` | `docker image`, `image ls`, `image rm` |
+| `dkps` `dkcls` | `docker ps`, `container ls -a` |
+| `deit`/`dkx`/`dkex` | `docker exec -it` |
+| `dkc` `dkcb` `dkcu` `dkcr` `dkcc` | compose, build/up/run/config (`dk-compose`가 있으면 그것을 사용) |
+
+oh-my-zsh 플러그인 alias도 있습니다: `git` (`gst`, `gco`, `gl` …), `docker`, `docker-compose` (`dco`, `dcup` …), `sudo` (ESC 두 번 → 앞에 sudo).
+
+## Docker
+
+`package_scope`가 `system` 또는 `full`일 때:
+
+| | Linux (sudo) | macOS |
+|---|---|---|
+| 설치 | Docker 공식 apt 저장소 → `docker-ce`, `docker-ce-cli`, `containerd.io`, `docker-buildx-plugin`, `docker-compose-plugin` | `brew install --cask docker` (Docker Desktop) |
+| GPU | NVIDIA GPU가 있으면 `nvidia-container-toolkit` 설치 + `nvidia-ctk runtime configure` | — |
+| 설정 | `systemctl enable --now docker`, 사용자를 `docker` 그룹에 추가 | Docker Desktop을 한 번 실행 (`open -a Docker`) |
+
+그룹 추가 후에는 다시 로그인하거나 `newgrp docker`. 이미 설정된 항목은 건너뜁니다. sudo가 없으면 설치·설정은 관리자 몫이고, docker를 쓸 수 없으면 경고만 출력합니다.
+
+확인:
+
+```sh
+docker run --rm hello-world
+docker run --rm --gpus all nvidia/cuda:12.4.1-base-ubuntu22.04 nvidia-smi   # GPU 서버
+```
+
 ## 구조
 
 ```
@@ -55,6 +138,7 @@ home/
   .chezmoiscripts/
     run_onchange_before_00-install-prerequisites   git, curl, zsh / Xcode CLT, Homebrew
     run_onchange_after_10-install-packages         시스템 패키지
+    run_onchange_after_12-configure-docker         docker 서비스·그룹·NVIDIA 런타임
     run_onchange_after_15-default-shell            로그인 셸을 zsh로
     run_onchange_after_20-install-uv-tools         uv + uv tools
   dot_zshrc.tmpl                   ~/.config/shrc/* → ~/.config/zshrc/* 로드
@@ -87,7 +171,8 @@ home/
 - { name: gh, scope: minimal, cmd: gh, apt: true, apt_repo: github-cli, brew: true }
 ```
 
-- `scope`: `minimal` < `system` (docker) < `full`. `package_scope` 이하만 설치
+- `scope`: `minimal` < `system` (docker, GPU면 nvidia-container-toolkit) < `full`. `package_scope` 이하만 설치
+- `requires: nvidia`: NVIDIA GPU가 감지된 머신에서만 설치
 - `cmd`가 이미 PATH에 있으면 건너뜀. 다른 사람이 관리하는 서버에서도 안전
 - Linux: sudo가 있으면 apt(+snap), 없으면 쓰기 가능한 Homebrew, 둘 다 없으면 빠진 목록만 출력
 - macOS: Homebrew formula + cask

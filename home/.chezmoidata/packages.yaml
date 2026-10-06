@@ -9,6 +9,7 @@
 #   brew       true, or the formula name when it differs
 #   brewcask   true, or the cask name (macOS only)
 #   snap       true, or snap name plus flags (e.g. "task --classic")
+#   requires   nvidia  (install only when an NVIDIA GPU was detected)
 
 apt_repos:
   github-cli:
@@ -17,6 +18,10 @@ apt_repos:
   docker:
     key_url: https://download.docker.com/linux/{id}/gpg
     line: "deb [arch={arch} signed-by={keyring}] https://download.docker.com/linux/{id} {codename} stable"
+  nvidia-container-toolkit:
+    key_url: https://nvidia.github.io/libnvidia-container/gpgkey
+    # $(ARCH) is expanded by apt itself.
+    line: "deb [signed-by={keyring}] https://nvidia.github.io/libnvidia-container/stable/deb/$(ARCH) /"
 
 packages:
   # --- minimal: CLI basics -------------------------------------------------
@@ -52,6 +57,7 @@ packages:
   - { name: containerd.io, scope: system, apt: true, apt_repo: docker }
   - { name: docker-buildx-plugin, scope: system, apt: true, apt_repo: docker }
   - { name: docker-compose-plugin, scope: system, apt: true, apt_repo: docker }
+  - { name: nvidia-container-toolkit, scope: system, cmd: nvidia-ctk, apt: true, apt_repo: nvidia-container-toolkit, requires: nvidia }
 
   # --- full: dev extras ----------------------------------------------------
   - { name: go, scope: full, cmd: go, apt: golang-go, brew: true }

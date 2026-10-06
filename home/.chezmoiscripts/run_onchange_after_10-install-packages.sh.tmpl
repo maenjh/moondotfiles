@@ -5,7 +5,7 @@
 # Packages whose `cmd` is already on PATH are skipped, so this is safe on
 # machines where someone else manages the system packages.
 # Reruns when this list changes: {{ include ".chezmoidata/packages.yaml" | sha256sum }}
-# scope={{ .package_scope }} sudo={{ .is_sudoer }}
+# scope={{ .package_scope }} sudo={{ .is_sudoer }} nvidia={{ .has_nvidia }}
 set -euo pipefail
 
 DRY_RUN="${DOTFILES_DRY_RUN:-0}"
@@ -25,11 +25,12 @@ done
 
 {{- $rank := dict "minimal" 0 "system" 1 "full" 2 }}
 {{- $max := get $rank .package_scope }}
+{{- $has_nvidia := .has_nvidia }}
 
 # Each entry is "package|cmd|apt_repo"; cmd and apt_repo may be empty.
 APT_PKGS=(
 {{- range .packages }}
-{{-   if and (get . "apt") (le (get $rank .scope) $max) }}
+{{-   if and (get . "apt") (le (get $rank .scope) $max) (or (ne (get . "requires") "nvidia") $has_nvidia) }}
     {{ printf "%s|%s|%s" (kindIs "string" .apt | ternary (get . "apt") .name) (get . "cmd") (get . "apt_repo") | quote }}
 {{-   end }}
 {{- end }}
@@ -58,6 +59,7 @@ CASK_PKGS=(
 )
 
 # apt_repo_info NAME: print "key_url|line" for an apt repository.
+# shellcheck disable=SC2016 # $(ARCH) is left for apt to expand
 apt_repo_info() {
     case "$1" in
 {{- range $name, $repo := .apt_repos }}
