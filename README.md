@@ -60,6 +60,7 @@ home/
   dot_zshrc.tmpl                   ~/.config/shrc/* → ~/.config/zshrc/* 로드
   dot_bashrc.tmpl                  ~/.config/shrc/* 로드, bash-completion, (필요 시) zsh로 전환
   dot_bash_profile                 로그인 bash → ~/.profile, ~/.bashrc
+  dot_profile                      POSIX 로그인 셸: PATH만
   dot_config/shrc/                 zsh + bash 공통
     00-dotfiles-export.tmpl        chezmoi 데이터 → 환경변수
     10-path                        path_prepend / path_append / path_show, 기본 PATH

@@ -16,6 +16,13 @@ if [[ -f $ZSH/oh-my-zsh.sh ]]; then
     unset _plugin
 
     source "$ZSH/oh-my-zsh.sh"
+
+    # The git plugin defines gpu='git push upstream'; keep gpu for the GPU monitor.
+    if (( $+commands[nvitop] )); then
+        alias gpu="nvitop"
+    else
+        alias gpu="uvx nvitop"
+    fi
 else
     autoload -Uz compinit && compinit -u
 fi

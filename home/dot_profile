@@ -1,0 +1,6 @@
+# Managed by chezmoi (moondotfiles).
+# POSIX login shells (sh, bash via ~/.bash_profile, display managers): PATH only.
+# Interactive settings live in ~/.zshrc and ~/.bashrc.
+
+# shellcheck source=/dev/null
+[ -f "$HOME/.config/shrc/10-path" ] && . "$HOME/.config/shrc/10-path"
