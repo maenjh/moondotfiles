@@ -18,6 +18,12 @@ git clone https://github.com/maenjh/moondotfiles.git ~/moondotfiles
 ~/moondotfiles/install.sh
 ```
 
+clone 없이 한 줄로 (chezmoi 설치 + `~/.local/share/chezmoi`에 clone + 적용):
+
+```sh
+sh -c "$(curl -fsLS get.chezmoi.io)" -- -b ~/.local/bin init --apply maenjh/moondotfiles
+```
+
 `install.sh`는 chezmoi가 없으면 `~/.local/bin`에 설치한 뒤 `chezmoi init --apply --source ~/moondotfiles`를 실행합니다. 처음 한 번 다음을 묻습니다 (답은 `~/.config/chezmoi/chezmoi.yaml`에 저장):
 
 | 질문 | 데이터 키 | 기본값 |
