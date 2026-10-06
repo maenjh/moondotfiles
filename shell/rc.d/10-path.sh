@@ -1,0 +1,63 @@
+# PATH helpers + default PATH layout. Sourced by init.sh (zsh and bash).
+
+# path_prepend DIR...: put each existing DIR at the front of PATH, moving it
+# there if it is already present. Later arguments end up in front.
+path_prepend() {
+    for _dir in "$@"; do
+        [ -d "$_dir" ] || continue
+        _path=":$PATH:"
+        while case "$_path" in *":$_dir:"*) true ;; *) false ;; esac; do
+            _path="${_path%%":$_dir:"*}:${_path#*":$_dir:"}"
+        done
+        _path="${_path#:}"
+        _path="${_path%:}"
+        PATH="$_dir${_path:+:$_path}"
+    done
+    unset _dir _path
+    export PATH
+}
+
+# path_append DIR...: add each existing DIR to the end of PATH if missing.
+path_append() {
+    for _dir in "$@"; do
+        [ -d "$_dir" ] || continue
+        case ":$PATH:" in
+            *":$_dir:"*) ;;
+            *) PATH="${PATH:+$PATH:}$_dir" ;;
+        esac
+    done
+    unset _dir
+    export PATH
+}
+
+# path_show: print PATH one entry per line, marking missing directories.
+path_show() {
+    printf '%s\n' "$PATH" | tr ':' '\n' | while IFS= read -r _dir; do
+        if [ -d "$_dir" ]; then
+            printf '  %s\n' "$_dir"
+        else
+            printf '! %s  (missing)\n' "$_dir"
+        fi
+    done
+}
+
+# --- Default layout: lowest priority first, highest priority last. ---
+
+# CUDA toolkit on GPU servers.
+path_append /usr/local/cuda/bin
+
+# Homebrew (macOS Apple Silicon / Intel, Linuxbrew).
+for _brew in /opt/homebrew/bin/brew /usr/local/bin/brew /home/linuxbrew/.linuxbrew/bin/brew "$HOME/.linuxbrew/bin/brew"; do
+    if [ -x "$_brew" ]; then
+        eval "$("$_brew" shellenv)"
+        break
+    fi
+done
+unset _brew
+
+# Language toolchains.
+path_prepend "$HOME/go/bin" "$HOME/.cargo/bin"
+
+# uv itself and `uv tool install` executables. Highest priority.
+path_prepend "$HOME/.local/bin"
+
