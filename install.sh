@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Bootstrap uv, uv tools, and PATH setup on Linux servers and macOS.
+# Bootstrap uv, uv tools, oh-my-zsh, and PATH setup on Linux servers and macOS.
 set -euo pipefail
 
 DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -10,6 +10,7 @@ BLOCK_END="# <<< dotfiles <<<"
 DRY_RUN=0
 INSTALL_UV=1
 INSTALL_TOOLS=1
+INSTALL_ZSH=1
 SETUP_SHELL=1
 FORCE=0
 UNINSTALL=0
@@ -20,6 +21,7 @@ Usage: ./install.sh [options]
 
   --no-uv        skip installing uv
   --no-tools     skip installing tools from uv/tools.txt
+  --no-zsh       skip installing oh-my-zsh, spaceship, and zsh plugins
   --no-shell     skip editing ~/.zshrc and ~/.bashrc
   --force        pass --force to 'uv tool install' (overwrite stale executables)
   --uninstall    remove the dotfiles block from shell rc files
@@ -112,6 +114,38 @@ install_tools() {
     fi
 }
 
+# clone_if_missing URL DIR: shallow-clone URL into DIR unless DIR exists.
+clone_if_missing() {
+    local url="$1" dir="$2"
+    if [ -d "$dir" ]; then
+        log "found ${dir/#$HOME/\~}"
+        return
+    fi
+    log "cloning $url"
+    run git clone --depth 1 --quiet "$url" "$dir"
+}
+
+install_zsh() {
+    if ! command -v zsh >/dev/null 2>&1; then
+        warn "zsh is not installed; skipping oh-my-zsh (install zsh, then rerun)"
+        return
+    fi
+    command -v git >/dev/null 2>&1 || die "git is required to install oh-my-zsh"
+
+    local omz="${ZSH:-$HOME/.oh-my-zsh}"
+    local custom="${ZSH_CUSTOM:-$omz/custom}"
+    clone_if_missing https://github.com/ohmyzsh/ohmyzsh.git "$omz"
+    clone_if_missing https://github.com/spaceship-prompt/spaceship-prompt.git "$custom/themes/spaceship"
+    local plugin
+    for plugin in zsh-autosuggestions zsh-syntax-highlighting zsh-completions; do
+        clone_if_missing "https://github.com/zsh-users/$plugin.git" "$custom/plugins/$plugin"
+    done
+
+    if [ "$(basename "${SHELL:-}")" != zsh ]; then
+        warn "login shell is ${SHELL:-unknown}; to switch: chsh -s \"\$(command -v zsh)\""
+    fi
+}
+
 # Print rc file contents with any existing dotfiles block removed.
 strip_block() {
     awk -v begin="$BLOCK_BEGIN" -v end="$BLOCK_END" '
@@ -171,6 +205,7 @@ main() {
         case "$1" in
             --no-uv) INSTALL_UV=0 ;;
             --no-tools) INSTALL_TOOLS=0 ;;
+            --no-zsh) INSTALL_ZSH=0 ;;
             --no-shell) SETUP_SHELL=0 ;;
             --force) FORCE=1 ;;
             --uninstall) UNINSTALL=1 ;;
@@ -195,6 +230,7 @@ main() {
     if [ "$INSTALL_TOOLS" -eq 1 ]; then
         install_tools || status=1
     fi
+    [ "$INSTALL_ZSH" -eq 1 ] && install_zsh
     [ "$SETUP_SHELL" -eq 1 ] && setup_shell
 
     log "done. open a new shell or run: exec \$SHELL"
