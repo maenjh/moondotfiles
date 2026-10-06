@@ -1,0 +1,52 @@
+#!/bin/bash
+# Make zsh the login shell. If chsh is not possible (no sudo, LDAP/AD accounts,
+# no password), ~/.bashrc switches to zsh at startup instead.
+# default_zsh={{ .default_zsh }}
+set -euo pipefail
+
+{{ if not .default_zsh -}}
+exit 0
+{{- end }}
+
+DRY_RUN="${DOTFILES_DRY_RUN:-0}"
+log() { printf '\033[1;34m==>\033[0m %s\n' "$*"; }
+warn() { printf '\033[1;33mwarn:\033[0m %s\n' "$*" >&2; }
+run() {
+    if [ "$DRY_RUN" = 1 ]; then printf '  + %s\n' "$*"; else "$@"; fi
+}
+
+zsh_path="$(command -v zsh || true)"
+if [ -z "$zsh_path" ]; then
+    warn "zsh is not installed; staying on the current shell"
+    exit 0
+fi
+
+user="$(id -un)"
+{{ if eq .chezmoi.os "darwin" -}}
+current="$(dscl . -read "/Users/$user" UserShell 2>/dev/null | awk '{print $2}')"
+{{- else -}}
+current="$(getent passwd "$user" | cut -d: -f7)"
+{{- end }}
+if [ "$(basename "${current:-}")" = zsh ]; then
+    log "login shell is already zsh ($current)"
+    exit 0
+fi
+
+{{ if .is_sudoer -}}
+if ! grep -qx "$zsh_path" /etc/shells; then
+    log "adding $zsh_path to /etc/shells"
+    run sudo sh -c "echo '$zsh_path' >> /etc/shells"
+fi
+log "changing login shell: ${current:-unknown} -> $zsh_path"
+if run sudo chsh -s "$zsh_path" "$user"; then
+    exit 0
+fi
+{{- else -}}
+if grep -qx "$zsh_path" /etc/shells && [ -t 0 ]; then
+    log "changing login shell: ${current:-unknown} -> $zsh_path (enter your password)"
+    if run chsh -s "$zsh_path"; then
+        exit 0
+    fi
+fi
+{{- end }}
+warn "could not change the login shell; bash will switch to zsh at startup instead"

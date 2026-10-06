@@ -1,0 +1,38 @@
+{{- /* Asked once on `chezmoi init`; answers are kept in ~/.config/chezmoi/chezmoi.yaml. */ -}}
+{{- $name := promptStringOnce . "name" "Full name" -}}
+{{- $email := promptStringOnce . "email" "Email" -}}
+{{- $github_username := promptStringOnce . "github_username" "GitHub username" -}}
+{{- $workspace_home := promptStringOnce . "workspace_home" "Workspace directory" (joinPath .chezmoi.homeDir "workspace") -}}
+{{- $package_scope := promptChoiceOnce . "package_scope" "Package scope (minimal/system/full)" (list "minimal" "system" "full") "minimal" -}}
+
+{{- $in_admin_group := false -}}
+{{- if ne .chezmoi.os "windows" -}}
+{{-   $groups := output "id" "-Gn" | trim | splitList " " -}}
+{{-   $in_admin_group = or (has "sudo" $groups) (has "admin" $groups) (has "wheel" $groups) -}}
+{{- end -}}
+{{- $is_sudoer := promptBoolOnce . "is_sudoer" "Can you use sudo here (needed for apt/snap)" $in_admin_group -}}
+
+{{- $default_zsh := promptBoolOnce . "default_zsh" "Make zsh the default shell" true -}}
+
+{{- $is_wsl := and (eq .chezmoi.os "linux") (contains "microsoft" (lower .chezmoi.kernel.osrelease)) -}}
+{{- $has_nvidia := not (not (lookPath "nvidia-smi")) -}}
+
+sourceDir: {{ .chezmoi.workingTree | quote }}
+
+diff:
+  exclude:
+    - scripts
+status:
+  exclude:
+    - always
+
+data:
+  name: {{ $name | quote }}
+  email: {{ $email | quote }}
+  github_username: {{ $github_username | quote }}
+  workspace_home: {{ $workspace_home | quote }}
+  package_scope: {{ $package_scope | quote }}
+  is_sudoer: {{ $is_sudoer }}
+  default_zsh: {{ $default_zsh }}
+  is_wsl: {{ $is_wsl }}
+  has_nvidia: {{ $has_nvidia }}

@@ -1,3 +1,4 @@
+# shellcheck shell=bash
 # Aliases and small functions shared by zsh and bash.
 
 alias paths="path_show"
@@ -14,20 +15,19 @@ refreshenv() {
     exec "$(ps -p $$ -o comm= | sed 's/^-//')"
 }
 
-# dots-update: pull the latest dotfiles and re-run the installer.
-dots-update() {
-    git -C "$DOTFILES" pull --ff-only && "$DOTFILES/install.sh" "$@"
-}
+# --- chezmoi ------------------------------------------------------------
+
+alias czm="chezmoi"
+alias czma="chezmoi apply"
+alias czmd="chezmoi diff"
+alias czme="chezmoi edit"
+alias czmu="chezmoi update"
+alias dotu="chezmoi update"
 
 # --- cd -----------------------------------------------------------------
 
-export WORKSPACE_HOME="${WORKSPACE_HOME:-$HOME/workspace}"
-export WORKSPACE_PROJECT_DIR="${WORKSPACE_PROJECT_DIR:-$WORKSPACE_HOME/projects}"
-export WORKSPACE_REFERENCE_DIR="${WORKSPACE_REFERENCE_DIR:-$WORKSPACE_HOME/references}"
-export WORKSPACE_CONTAINER_DIR="${WORKSPACE_CONTAINER_DIR:-$WORKSPACE_HOME/containers}"
-
 alias cdw='cd "$WORKSPACE_HOME"'
-alias cddot='cd "$DOTFILES"'
+alias cddot='cd "$DOTFILES_DIR"'
 
 # mcd DIR: mkdir -p and cd into it.
 mcd() {

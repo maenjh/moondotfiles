@@ -1,4 +1,5 @@
-# PATH helpers + default PATH layout. Sourced by init.sh (zsh and bash).
+# shellcheck shell=bash
+# PATH helpers + default PATH layout (zsh + bash).
 
 # path_prepend DIR...: put each existing DIR at the front of PATH, moving it
 # there if it is already present. Later arguments end up in front.

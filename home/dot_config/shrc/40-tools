@@ -1,0 +1,11 @@
+# shellcheck shell=bash
+# Shell hooks for tools that support both zsh and bash.
+
+if command -v direnv >/dev/null 2>&1; then
+    if [ -n "${ZSH_VERSION:-}" ]; then
+        # https://github.com/romkatv/powerlevel10k#how-do-i-initialize-direnv-when-using-instant-prompt
+        emulate zsh -c "$(direnv hook zsh)"
+    elif [ -n "${BASH_VERSION:-}" ]; then
+        eval "$(direnv hook bash)"
+    fi
+fi

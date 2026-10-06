@@ -1,0 +1,11 @@
+# Leftovers from the previous entelecheia/dotfiles setup that moondotfiles replaces.
+# Files with the same name (00-dotfiles-export, 20-export, 30-aliases) are overwritten instead.
+.config/shrc/05-package-list
+.config/shrc/10-autoupdate
+.config/shrc/10-locale
+.config/shrc/99-autoupdate
+.config/zshrc/10-direnv
+.config/zshrc/20-brew
+.config/zshrc/20-completions
+.config/zshrc/30-oh-my-zsh
+.config/zshrc/50-conda

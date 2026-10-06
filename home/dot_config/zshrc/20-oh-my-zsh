@@ -1,0 +1,24 @@
+# oh-my-zsh with the spaceship prompt (downloaded via .chezmoiexternal.yaml).
+# Prompt settings: ~/.config/spaceship/spaceship.zsh
+
+export ZSH="$HOME/.oh-my-zsh"
+
+if [[ -f $ZSH/oh-my-zsh.sh ]]; then
+    ZSH_THEME="spaceship/spaceship"
+    DISABLE_AUTO_UPDATE="true"         # chezmoi refreshes oh-my-zsh weekly
+    DISABLE_MAGIC_FUNCTIONS="true"     # keeps pasted URLs intact
+
+    plugins=(git git-prompt docker docker-compose sudo dotenv colorize)
+    # External plugins, only when present. zsh-syntax-highlighting must be last.
+    for _plugin in zsh-autosuggestions zsh-syntax-highlighting; do
+        [[ -d $ZSH/custom/plugins/$_plugin ]] && plugins+=("$_plugin")
+    done
+    unset _plugin
+
+    source "$ZSH/oh-my-zsh.sh"
+else
+    autoload -Uz compinit && compinit -u
+fi
+
+# Let zsh use bash-style completion functions too.
+autoload -Uz bashcompinit && bashcompinit

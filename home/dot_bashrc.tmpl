@@ -1,0 +1,69 @@
+# Managed by chezmoi (moondotfiles): {{ .chezmoi.workingTree }}
+# Edit the source with `chezmoi edit ~/.bashrc`, not this file.
+
+# Interactive shells only.
+case $- in
+    *i*) ;;
+    *) return ;;
+esac
+
+{{ if .default_zsh -}}
+# Switch to zsh when bash is the top-level shell (login shell or first shell
+# in a terminal) and chsh was not possible. Running `bash` by hand from zsh
+# stays in bash. Set MOONDOTFILES_NO_ZSH=1 to opt out.
+if [ -z "${MOONDOTFILES_NO_ZSH:-}" ] && command -v zsh >/dev/null 2>&1; then
+    if shopt -q login_shell; then
+        exec zsh -l
+    elif [ "${SHLVL:-1}" -le 1 ]; then
+        exec zsh
+    fi
+fi
+
+{{ end -}}
+# ~/.profile on Ubuntu sources this file too; load once per shell.
+[ -n "${__MOONDOTFILES_BASHRC:-}" ] && return
+__MOONDOTFILES_BASHRC=1
+
+HISTCONTROL=ignoreboth
+HISTSIZE=10000
+HISTFILESIZE=20000
+shopt -s histappend checkwinsize
+
+export DOTFILES_VERBOSE="${DOTFILES_VERBOSE:-false}"
+
+# Shared zsh/bash settings. Machine-specific files (e.g. 90-local) can be added
+# next to the managed ones.
+shopt -s nullglob
+for _rc_file in "$HOME/.config/shrc"/*; do
+    case "$_rc_file" in
+        *.bak* | *.tmp* | *.zwc | *.orig | *~) continue ;;
+    esac
+    [ -f "$_rc_file" ] || continue
+    [ "$DOTFILES_VERBOSE" = true ] && echo "* loading $_rc_file"
+    # shellcheck source=/dev/null
+    . "$_rc_file"
+done
+shopt -u nullglob
+unset _rc_file
+
+# bash-completion loads ~/.local/share/bash-completion/completions/* on demand.
+if ! shopt -oq posix; then
+    for _bc in \
+        /usr/share/bash-completion/bash_completion \
+        /etc/bash_completion \
+        "${HOMEBREW_PREFIX:-/nonexistent}/etc/profile.d/bash_completion.sh"; do
+        if [ -r "$_bc" ]; then
+            # shellcheck source=/dev/null
+            . "$_bc"
+            break
+        fi
+    done
+    unset _bc
+fi
+
+# Prompt: user@host:dir (git branch)
+__moondotfiles_git_branch() {
+    local branch
+    branch="$(git symbolic-ref --short HEAD 2>/dev/null)" && printf ' (%s)' "$branch"
+}
+PS1='\[\e[1;32m\]\u@\h\[\e[0m\]:\[\e[1;34m\]\w\[\e[0;35m\]$(__moondotfiles_git_branch)\[\e[0m\]\$ '

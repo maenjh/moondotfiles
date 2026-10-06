@@ -1,0 +1,61 @@
+# System packages installed by .chezmoiscripts/run_onchange_after_10-install-packages.sh.
+#
+# Fields:
+#   name       package name (used for every manager unless overridden)
+#   scope      minimal | system | full  (installed when <= data.package_scope)
+#   cmd        command that proves it is installed; skipped if found on PATH
+#   apt        true, or the apt package name when it differs
+#   apt_repo   key of apt_repos below, added before installing
+#   brew       true, or the formula name when it differs
+#   brewcask   true, or the cask name (macOS only)
+#   snap       true, or snap name plus flags (e.g. "task --classic")
+
+apt_repos:
+  github-cli:
+    key_url: https://cli.github.com/packages/githubcli-archive-keyring.gpg
+    line: "deb [arch={arch} signed-by={keyring}] https://cli.github.com/packages stable main"
+  docker:
+    key_url: https://download.docker.com/linux/{id}/gpg
+    line: "deb [arch={arch} signed-by={keyring}] https://download.docker.com/linux/{id} {codename} stable"
+
+packages:
+  # --- minimal: CLI basics -------------------------------------------------
+  - { name: build-essential, scope: minimal, cmd: gcc, apt: true }
+  - { name: ca-certificates, scope: minimal, apt: true }
+  - { name: curl, scope: minimal, cmd: curl, apt: true, brew: true }
+  - { name: wget, scope: minimal, cmd: wget, apt: true, brew: true }
+  - { name: git, scope: minimal, cmd: git, apt: true, brew: true }
+  - { name: git-lfs, scope: minimal, cmd: git-lfs, apt: true, brew: true }
+  - { name: gh, scope: minimal, cmd: gh, apt: true, apt_repo: github-cli, brew: true }
+  - { name: zsh, scope: minimal, cmd: zsh, apt: true, brew: true }
+  - { name: vim, scope: minimal, cmd: vim, apt: true, brew: true }
+  - { name: tmux, scope: minimal, cmd: tmux, apt: true, brew: true }
+  - { name: tree, scope: minimal, cmd: tree, apt: true, brew: true }
+  - { name: unzip, scope: minimal, cmd: unzip, apt: true, brew: true }
+  - { name: zip, scope: minimal, cmd: zip, apt: true, brew: true }
+  - { name: jq, scope: minimal, cmd: jq, apt: true, brew: true }
+  - { name: yq, scope: minimal, cmd: yq, snap: true, brew: true }
+  - { name: fzf, scope: minimal, cmd: fzf, apt: true, brew: true }
+  - { name: ripgrep, scope: minimal, cmd: rg, apt: true, brew: true }
+  - { name: direnv, scope: minimal, cmd: direnv, apt: true, brew: true }
+  - { name: htop, scope: minimal, cmd: htop, apt: true, brew: true }
+  - { name: gnupg, scope: minimal, cmd: gpg, apt: true, brew: true }
+  - { name: age, scope: minimal, cmd: age, apt: true, brew: true }
+  - { name: file, scope: minimal, cmd: file, apt: true }
+  - { name: locales, scope: minimal, apt: true }
+  - { name: coreutils, scope: minimal, brew: true }
+  - { name: font-fira-code-nerd-font, scope: minimal, brewcask: true }
+
+  # --- system: docker ------------------------------------------------------
+  - { name: docker-ce, scope: system, cmd: docker, apt: true, apt_repo: docker, brewcask: docker }
+  - { name: docker-ce-cli, scope: system, apt: true, apt_repo: docker }
+  - { name: containerd.io, scope: system, apt: true, apt_repo: docker }
+  - { name: docker-buildx-plugin, scope: system, apt: true, apt_repo: docker }
+  - { name: docker-compose-plugin, scope: system, apt: true, apt_repo: docker }
+
+  # --- full: dev extras ----------------------------------------------------
+  - { name: go, scope: full, cmd: go, apt: golang-go, brew: true }
+  - { name: task, scope: full, cmd: task, snap: "task --classic", brew: go-task }
+  - { name: bat, scope: full, cmd: bat, apt: true, brew: true }
+  - { name: fd, scope: full, cmd: fd, apt: fd-find, brew: true }
+  - { name: btop, scope: full, cmd: btop, apt: true, brew: true }

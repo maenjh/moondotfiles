@@ -1,0 +1,73 @@
+# shellcheck shell=bash
+# Environment rendered from chezmoi data (~/.config/chezmoi/chezmoi.yaml).
+# Change values with `chezmoi init` (re-prompts only for new keys) or by editing
+# that file, then `chezmoi apply`. Secrets are never rendered here.
+
+# --- dotfiles -----------------------------------------------------------
+export DOTFILES_DIR={{ .chezmoi.workingTree | quote }}
+export DOTFILES_OS={{ .chezmoi.os | quote }}
+export DOTFILES_ARCH={{ .chezmoi.arch | quote }}
+export DOTFILES_PACKAGE_SCOPE={{ .package_scope | quote }}
+export DOTFILES_SUDOER={{ .is_sudoer | quote }}
+export DOTFILES_IS_WSL={{ .is_wsl | quote }}
+export DOTFILES_HAS_NVIDIA={{ .has_nvidia | quote }}
+
+# --- user ---------------------------------------------------------------
+export USER_FULLNAME={{ .name | quote }}
+export USER_EMAIL={{ .email | quote }}
+export GITHUB_USERNAME={{ .github_username | quote }}
+export GITHUB_USER="$GITHUB_USERNAME"
+export SYSTEM_HOSTNAME={{ .chezmoi.hostname | quote }}
+USER_UID="$(id -u)"
+USER_GID="$(id -g)"
+export USER_UID USER_GID
+export USERNAME="${USERNAME:-$(id -un)}"
+
+# --- workspace ----------------------------------------------------------
+export WORKSPACE_HOME={{ .workspace_home | quote }}
+export WORKSPACE_PROJECT_DIR="$WORKSPACE_HOME/projects"
+export WORKSPACE_REFERENCE_DIR="$WORKSPACE_HOME/references"
+export WORKSPACE_CONTAINER_DIR="$WORKSPACE_HOME/containers"
+export WORKSPACE_MODEL_DIR="$WORKSPACE_HOME/models"
+export WORKSPACE_DATASET_DIR="$WORKSPACE_HOME/datasets"
+export GIT_WORKSPACE="$WORKSPACE_PROJECT_DIR"
+export WORKON_HOME="$HOME/.venvs"
+
+# --- docker -------------------------------------------------------------
+export CONTAINER_REGISTRY="ghcr.io"
+export DOCKER_USERNAME="${DOCKER_USERNAME:-$GITHUB_USERNAME}"
+
+# --- keys (paths only; files stay outside git) ---------------------------
+export SSH_HOME="$HOME/.ssh"
+export GNUPGHOME="${GNUPGHOME:-$HOME/.gnupg}"
+export PASSWORD_STORE_DIR="$HOME/.password-store"
+export PASSAGE_DIR="$HOME/.passage/store"
+export GIT_COMMIT_GPGSIGN="false"
+
+if [ -r "$SSH_HOME/.gpg-id" ]; then
+    GPG_KEY_ID="$(cat "$SSH_HOME/.gpg-id")"
+    export GPG_KEY_ID
+    export PASSWORD_STORE_KEY="$GPG_KEY_ID"
+fi
+
+for _key in "$SSH_HOME/id_ed25519_$GITHUB_USERNAME.pub" "$SSH_HOME/id_ed25519.pub"; do
+    if [ -r "$_key" ]; then
+        export SSH_PUB_KEY_FILE="$_key"
+        SSH_PUB_KEY="$(cat "$_key")"
+        export SSH_PUB_KEY
+        break
+    fi
+done
+unset _key
+
+if [ -r "$SSH_HOME/age_key_$GITHUB_USERNAME" ]; then
+    export AGE_KEY_FILE="$SSH_HOME/age_key_$GITHUB_USERNAME"
+    export SOPS_AGE_KEY_FILE="$AGE_KEY_FILE"
+    export PASSAGE_IDENTITIES_FILE="$AGE_KEY_FILE"
+fi
+if [ -r "$SSH_HOME/authorized_age_keys" ]; then
+    AGE_RECIPIENTS="$(sed -n '/^age1/p' "$SSH_HOME/authorized_age_keys" | sort -u | paste -sd, -)"
+    export AGE_RECIPIENTS
+    export SOPS_AGE_RECIPIENTS="$AGE_RECIPIENTS"
+    export PASSAGE_RECIPIENTS="${AGE_RECIPIENTS//,/ }"
+fi

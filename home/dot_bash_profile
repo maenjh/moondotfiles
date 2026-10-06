@@ -1,0 +1,7 @@
+# Managed by chezmoi (moondotfiles).
+# bash login shells (ssh, macOS Terminal) read this instead of ~/.bashrc.
+
+# shellcheck source=/dev/null
+[ -f "$HOME/.profile" ] && . "$HOME/.profile"
+# shellcheck source=/dev/null
+[ -f "$HOME/.bashrc" ] && . "$HOME/.bashrc"

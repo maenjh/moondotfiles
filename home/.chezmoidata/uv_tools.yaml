@@ -1,0 +1,17 @@
+# CLI tools installed with `uv tool install` by run_onchange_after_20-install-uv-tools.sh.
+#   name  package name
+#   with  extra packages for the tool's environment (--with)
+#   os    linux | darwin  (install only there)
+
+uv_tools:
+  - { name: nvitop, os: linux }
+  - { name: commitizen }
+  - { name: copier }
+  - { name: dotdrop }
+  - { name: mypy, with: [setuptools] }
+  - { name: nox, with: [nox-poetry, jinja2, tox] }
+  - { name: poethepoet }
+  - { name: poetry }
+  - { name: pre-commit }
+  - { name: python-semantic-release }
+  - { name: sourcery }

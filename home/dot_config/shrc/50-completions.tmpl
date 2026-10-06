@@ -1,0 +1,32 @@
+# shellcheck shell=bash
+# Generated shell completions (list: .chezmoidata/completions.yaml).
+# Writes one file per tool and rebuilds it only when it is missing or older than
+# the tool's executable. zsh reads the files through fpath (zshrc/10-completions);
+# bash-completion loads them on demand from ~/.local/share/bash-completion/completions.
+
+# _df_completion FILE NAME COMMAND...: write COMMAND's output to FILE if stale.
+_df_completion() {
+    local file="$1" bin
+    bin="$(command -v "$2" 2>/dev/null)" || return 0
+    shift 2
+    if [ ! -s "$file" ] || [ "$bin" -nt "$file" ]; then
+        "$@" >"$file" 2>/dev/null || rm -f "$file"
+    fi
+}
+
+if [ -n "${ZSH_VERSION:-}" ]; then
+    DOTFILES_ZSH_COMPLETIONS="${XDG_CACHE_HOME:-$HOME/.cache}/moondotfiles/zsh-completions"
+    [ -d "$DOTFILES_ZSH_COMPLETIONS" ] || mkdir -p "$DOTFILES_ZSH_COMPLETIONS"
+{{- range .completions }}
+    _df_completion "$DOTFILES_ZSH_COMPLETIONS/_{{ .name }}" {{ .name }} {{ .zsh }}
+{{- end }}
+elif [ -n "${BASH_VERSION:-}" ]; then
+    _df_bash_dir="${XDG_DATA_HOME:-$HOME/.local/share}/bash-completion/completions"
+    [ -d "$_df_bash_dir" ] || mkdir -p "$_df_bash_dir"
+{{- range .completions }}
+    _df_completion "$_df_bash_dir/{{ .name }}" {{ .name }} {{ .bash }}
+{{- end }}
+    unset _df_bash_dir
+fi
+
+unset -f _df_completion

@@ -1,0 +1,19 @@
+# Managed by chezmoi (moondotfiles): {{ .chezmoi.workingTree }}
+# Edit the source with `chezmoi edit ~/.zshrc`, not this file.
+#
+# Loads ~/.config/shrc/* (zsh + bash) and then ~/.config/zshrc/* (zsh only) in
+# filename order. For machine-specific settings, add a file chezmoi does not
+# manage, e.g. ~/.config/shrc/90-local. It is loaded but never overwritten.
+
+export DOTFILES_VERBOSE="${DOTFILES_VERBOSE:-false}"
+
+for _rc_dir in "$HOME/.config/shrc" "$HOME/.config/zshrc"; do
+    for _rc_file in "$_rc_dir"/*(N.); do
+        case "$_rc_file" in
+            *.bak* | *.tmp* | *.zwc | *.orig | *~) continue ;;
+        esac
+        [[ $DOTFILES_VERBOSE == true ]] && echo "* loading $_rc_file"
+        source "$_rc_file"
+    done
+done
+unset _rc_dir _rc_file

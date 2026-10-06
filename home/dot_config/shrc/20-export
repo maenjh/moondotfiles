@@ -1,0 +1,65 @@
+# shellcheck shell=bash
+# Locale, editor, and version-manager setup (zsh + bash). Runs after PATH is set.
+
+export LANG="${LANG:-en_US.UTF-8}"
+export LANGUAGE="${LANGUAGE:-en_US:en}"
+export LC_ALL="${LC_ALL:-en_US.UTF-8}"
+export LC_CTYPE="${LC_CTYPE:-en_US.UTF-8}"
+[ "${TERM:-}" = xterm ] && export TERM=xterm-256color
+
+export EDITOR="${EDITOR:-vi}"
+export VISUAL="${VISUAL:-$EDITOR}"
+
+# GitHub token for tools that read GITHUB_TOKEN/GH_TOKEN. Taken from the gh
+# login at runtime instead of being written into a file.
+if [ -z "${GITHUB_TOKEN:-}" ] && command -v gh >/dev/null 2>&1; then
+    GITHUB_TOKEN="$(gh auth token 2>/dev/null || true)"
+fi
+if [ -n "${GITHUB_TOKEN:-}" ]; then
+    export GITHUB_TOKEN
+    export GH_TOKEN="${GH_TOKEN:-$GITHUB_TOKEN}"
+else
+    unset GITHUB_TOKEN
+fi
+
+# nvm
+if [ -s "$HOME/.nvm/nvm.sh" ]; then
+    export NVM_DIR="$HOME/.nvm"
+    # shellcheck source=/dev/null
+    . "$NVM_DIR/nvm.sh"
+    # shellcheck source=/dev/null
+    [ -n "${BASH_VERSION:-}" ] && [ -s "$NVM_DIR/bash_completion" ] && . "$NVM_DIR/bash_completion"
+fi
+
+# pyenv
+if [ -d "$HOME/.pyenv" ]; then
+    export PYENV_ROOT="$HOME/.pyenv"
+    path_prepend "$PYENV_ROOT/bin"
+    if command -v pyenv >/dev/null 2>&1; then
+        eval "$(pyenv init -)"
+        export PYENV_VIRTUALENV_DISABLE_PROMPT=1
+    fi
+fi
+
+# rbenv / RubyGems
+path_prepend "$HOME/.rbenv/bin"
+command -v rbenv >/dev/null 2>&1 && eval "$(rbenv init -)"
+if command -v gem >/dev/null 2>&1; then
+    export GEM_HOME="$HOME/.gem"
+    path_prepend "$GEM_HOME/bin"
+fi
+
+# sdkman
+if [ -r "$HOME/.sdkman/bin/sdkman-init.sh" ]; then
+    export SDKMAN_DIR="$HOME/.sdkman"
+    # shellcheck source=/dev/null
+    . "$SDKMAN_DIR/bin/sdkman-init.sh"
+fi
+
+# tcmalloc, when installed (faster malloc for some ML workloads).
+if [ -f /usr/lib64/libtcmalloc.so.4 ]; then
+    export LD_PRELOAD="/usr/lib64/libtcmalloc.so.4"
+fi
+
+# uv tools and ~/.local/bin win over anything a version manager added above.
+path_prepend "$HOME/.local/bin"

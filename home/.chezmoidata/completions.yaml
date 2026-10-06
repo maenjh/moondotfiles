@@ -1,0 +1,18 @@
+# Shell completions generated at shell startup (see shrc/50-completions and
+# zshrc/10-completions). A file is rebuilt only when missing or older than the
+# tool's executable, so upgrades are picked up without slowing every shell.
+#   name  command that must be on PATH
+#   zsh   command printing the zsh completion
+#   bash  command printing the bash completion
+
+completions:
+  - { name: uv, zsh: "uv generate-shell-completion zsh", bash: "uv generate-shell-completion bash" }
+  - { name: uvx, zsh: "uvx --generate-shell-completion zsh", bash: "uvx --generate-shell-completion bash" }
+  - { name: poetry, zsh: "poetry completions zsh", bash: "poetry completions bash" }
+  - { name: poe, zsh: "poe _zsh_completion", bash: "poe _bash_completion" }
+  - { name: chezmoi, zsh: "chezmoi completion zsh", bash: "chezmoi completion bash" }
+  - { name: gh, zsh: "gh completion -s zsh", bash: "gh completion -s bash" }
+  - { name: docker, zsh: "docker completion zsh", bash: "docker completion bash" }
+  - { name: task, zsh: "task --completion zsh", bash: "task --completion bash" }
+  - { name: yq, zsh: "yq shell-completion zsh", bash: "yq shell-completion bash" }
+  - { name: kubectl, zsh: "kubectl completion zsh", bash: "kubectl completion bash" }
